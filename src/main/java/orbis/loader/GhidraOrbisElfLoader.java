@@ -68,16 +68,15 @@ public class GhidraOrbisElfLoader extends ElfLoader {
 	}
 
 	@Override
-	public void load(ByteProvider provider, LoadSpec loadSpec, List<Option> options,
-			Program program, TaskMonitor monitor, MessageLog log)
+	public void load(Program program, ImporterSettings settings)
 			throws IOException, CancelledException {
 
 		try {
-			OrbisElfHeader elf = new OrbisElfHeader(provider, log::appendMsg);
-			OrbisElfProgramBuilder.loadElf(elf, program, options, log, monitor);
+			OrbisElfHeader elf = new OrbisElfHeader(settings.provider(), settings.log()::appendMsg);
+			OrbisElfProgramBuilder.loadElf(elf, program, settings.options(), settings.log(), settings.monitor());
 			program.getUsrPropertyManager().createVoidPropertyMap("orbis");
 		} catch (DuplicateNameException e) {
-			log.appendException(e);
+			settings.log().appendException(e);
 		} catch (ElfException e) {
 			throw new IOException(e.getMessage());
 		}
@@ -100,9 +99,9 @@ public class GhidraOrbisElfLoader extends ElfLoader {
 
 	@Override
 	public List<Option> getDefaultOptions(ByteProvider provider, LoadSpec loadSpec,
-			DomainObject domainObject, boolean loadIntoProgram) {
+			DomainObject domainObject, boolean loadIntoProgram, boolean mirrorFsLayout) {
 		List<Option> options =
-			super.getDefaultOptions(provider, loadSpec, domainObject, loadIntoProgram);
+			super.getDefaultOptions(provider, loadSpec, domainObject, loadIntoProgram, mirrorFsLayout);
 		Option baseOption = options.stream()
 			.filter(o -> o.getName().equals("Image Base"))
 			.findFirst()

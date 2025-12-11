@@ -44,13 +44,16 @@ public class GhidraOrbisSelfLoader extends GhidraOrbisElfLoader {
 	}
 
 	@Override
-	public void load(ByteProvider provider, LoadSpec loadSpec, List<Option> options,
-			Program program, TaskMonitor monitor, MessageLog log)
+	public void load(Program program, ImporterSettings settings)
 			throws IOException, CancelledException {
 		try {
-			SelfHeader header = new SelfHeader(provider);
+			SelfHeader header = new SelfHeader(settings.provider());
 			ByteProvider elfByteProvider = header.getElfByteProvider();
-			super.load(elfByteProvider, loadSpec, options, program, monitor, log);
+			ImporterSettings newSettings = new ImporterSettings(elfByteProvider,
+				program.getName(), settings.project(), settings.projectRootPath(),
+				settings.mirrorFsLayout(), settings.loadSpec(), settings.options(),
+				settings.consumer(), settings.log(), settings.monitor());
+			super.load(program, newSettings);
 			elfByteProvider.close();
 		} catch (EncryptedSelfException e) {
 			Msg.showInfo(this, null, "Import Failed", "SELF is encrypted and cannot be loaded");
@@ -60,12 +63,12 @@ public class GhidraOrbisSelfLoader extends GhidraOrbisElfLoader {
 
 	@Override
 	public List<Option> getDefaultOptions(ByteProvider provider, LoadSpec loadSpec,
-			DomainObject domainObject, boolean loadIntoProgram) {
+			DomainObject domainObject, boolean loadIntoProgram, boolean mirrorFsLayout) {
 		try {
 			SelfHeader header = new SelfHeader(provider);
 			ByteProvider elfByteProvider = header.getElfHeaderByteProvider();
 			return super.getDefaultOptions(
-				elfByteProvider, loadSpec, domainObject, loadIntoProgram);
+				elfByteProvider, loadSpec, domainObject, loadIntoProgram, mirrorFsLayout);
 		} catch (Exception e) {
 			// already logged
 			return Collections.emptyList();
